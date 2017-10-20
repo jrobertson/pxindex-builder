@@ -131,7 +131,7 @@ Output (extract):
 
 Notes:
 
-* This gem is suited a mobile phone user interface where the user finds it more convenient than speech recognition or by manually inputting the text (even with autocompletion)
+* This gem is suited for a mobile phone user interface where the user finds it more convenient than speech recognition or by manually inputting the text (even with autocompletion)
 * The gem is intended to store a relatively large list of user-defined statements.
 
 ## Resource

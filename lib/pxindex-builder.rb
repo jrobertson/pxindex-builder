@@ -9,14 +9,16 @@ require 'polyrex-builder'
 
 class PxIndexBuilder
 
-  attr_reader :to_xml
+  attr_reader :to_xml, :to_h
 
   def initialize(raw_s, ignore=[])
 
     s, _ = RXFHelper.read(raw_s)
 
     h = YAML.load(s)
+
     words = h.keys.join(' ').split(/ +/).map {|x| x[/\w+/]}.uniq\
+      #.tap {|x| puts 't: ' + x.inspect}
       .reject {|x| x.length < 3}\
       .reject {|x| ignore.include? x}\
       .reject {|x| x.length < 4 and !WordsDotDat.list.include? x.downcase}\
@@ -35,7 +37,9 @@ class PxIndexBuilder
 
     end
 
-    @to_xml = PolyrexBuilder.new(scan(index), parents: %i(entry)).to_xml
+    @to_h = h = scan(index)
+    @to_xml = PolyrexBuilder.new(h, parents: %i(entry)).to_xml
+
 
   end
 

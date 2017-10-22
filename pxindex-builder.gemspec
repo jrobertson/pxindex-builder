@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'pxindex-builder'
-  s.version = '0.1.0'
+  s.version = '0.1.1'
   s.summary = 'Builds a Polyrex index (pxindex) XML document from ' + 
       'a YAML document'
   s.authors = ['James Robertson']

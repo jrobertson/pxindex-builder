@@ -11,11 +11,16 @@ class PxIndexBuilder
 
   attr_reader :to_xml, :to_h
 
-  def initialize(raw_s, ignore=[])
+  def initialize(obj, ignore=[])
 
-    s, _ = RXFHelper.read(raw_s)
-
-    h = YAML.load(s)
+    h = if obj.is_a? String then
+    
+      s, _ = RXFHelper.read(obj)
+      YAML.load(s)
+      
+    elsif obj.is_a? Hash
+      obj
+    end
 
     words = h.keys.join(' ').split(/ +/).map {|x| x[/\w+/]}.uniq\
       #.tap {|x| puts 't: ' + x.inspect}

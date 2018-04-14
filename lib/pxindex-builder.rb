@@ -2,6 +2,7 @@
 
 # file: pxindex-builder.rb
 
+require 'line-tree'
 require 'wordsdotdat'
 require 'phrase_lookup'
 require 'polyrex-builder'
@@ -9,18 +10,52 @@ require 'polyrex-builder'
 
 class PxIndexBuilder
 
-  attr_reader :to_xml, :to_h
-
-  def initialize(obj, ignore=[])
-
-    h = if obj.is_a? String then
+  attr_reader :to_xml, :to_h, :to_s
+  
+  def initialize(obj, debug: false, ignore: [])
+    
+    @debug = debug
+    puts 'inside initialize: ' if @debug
+    
+    if obj.is_a? String then
     
       s, _ = RXFHelper.read(obj)
-      YAML.load(s)
+      
+      s =~ /^---/ ?  import_phrases(YAML.load(s), s, ignore) : import_index(s)
       
     elsif obj.is_a? Hash
-      obj
+      import_phrases obj, s, ignore
     end
+    
+  end
+  
+  
+  private
+  
+  def import_index(raw_s)
+    
+    # find the entries which aren't on the main index
+    s = raw_s.sub(/<[^>]+>\n/,'')
+    doc = LineTree.new(s, debug: @debug).to_doc(encapsulate: true)
+    a = doc.root.xpath('entry/text()')
+    puts 'doc: ' + doc.xml if @debug
+    a2 = doc.root.xpath('entry//entry/text()')
+    puts 'a2: ' + a2.inspect if @debug
+    a3 = a2 - a
+    puts 'a3:' + a3.inspect if @debug
+    
+    # add the new entries to the main index
+    s << "\n" + a3.join("\n")
+
+    s.prepend '<?ph schema="entries/section[heading]/entry[title, url]"?>
+
+    '
+    
+    @to_s = s
+      
+  end
+  
+  def import_phrases(h, s, ignore=[])
 
     words = h.keys.join(' ').split(/ +/).map {|x| x[/\w+/]}.uniq\
       #.tap {|x| puts 't: ' + x.inspect}
@@ -43,12 +78,13 @@ class PxIndexBuilder
     end
 
     @to_h = h = scan(index)
+    puts 'h: ' + h.inspect if @debug
     @to_xml = PolyrexBuilder.new(h, parents: %i(entry)).to_xml
 
 
   end
 
-  private
+
 
   def scan(rows)
 

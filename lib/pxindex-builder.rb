@@ -38,10 +38,11 @@ class PxIndexBuilder
     s = raw_s.sub(/<[^>]+>\n/,'')
     doc = LineTree.new(s, debug: @debug).to_doc(encapsulate: true)
     a = doc.root.xpath('entry/text()')
+    puts 'a: ' + a.inspect if @debug
     puts 'doc: ' + doc.xml if @debug
     a2 = doc.root.xpath('entry//entry/text()')
     puts 'a2: ' + a2.inspect if @debug
-    a3 = a2 - a
+    a3 = a2.map(&:rstrip) - a.map(&:rstrip)
     puts 'a3:' + a3.inspect if @debug
     
     # add the new entries to the main index

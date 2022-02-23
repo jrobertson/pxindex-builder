@@ -2,38 +2,39 @@
 
 # file: pxindex-builder.rb
 
-require 'line-tree'
+require 'line-tree' # *new*
 require 'wordsdotdat'
 require 'phrase_lookup'
 require 'polyrex-builder'
+require 'rxfreader'
 
 
 class PxIndexBuilder
 
   attr_reader :to_xml, :to_h, :to_s
-  
+
   def initialize(obj, debug: false, ignore: [])
-    
+
     @debug = debug
     puts 'inside initialize: ' if @debug
-    
+
     if obj.is_a? String then
-    
-      s, _ = RXFHelper.read(obj)
-      
+
+      s, _ = RXFReader.read(obj)
+
       s =~ /^---/ ?  import_phrases(YAML.load(s), s, ignore) : import_index(s)
-      
+
     elsif obj.is_a? Hash
       import_phrases obj, s, ignore
     end
-    
+
   end
-  
-  
+
+
   private
-  
+
   def import_index(raw_s)
-    
+
     # find the entries which aren't on the main index
     s = raw_s.sub(/<[^>]+>\n/,'')
     doc = LineTree.new(s, debug: @debug).to_doc(encapsulate: true)
@@ -44,18 +45,18 @@ class PxIndexBuilder
     puts 'a2: ' + a2.inspect if @debug
     a3 = a2.map(&:rstrip) - a.map(&:rstrip)
     puts 'a3:' + a3.inspect if @debug
-    
+
     # add the new entries to the main index
     s << "\n" + a3.join("\n")
 
     s.prepend '<?ph schema="entries/section[heading]/entry[title, url]"?>
 
     '
-    
+
     @to_s = s
-      
+
   end
-  
+
   def import_phrases(h, s, ignore=[])
 
     words = h.keys.join(' ').split(/ +/).map {|x| x[/\w+/]}.uniq\
@@ -65,11 +66,11 @@ class PxIndexBuilder
       .reject {|x| x.length < 4 and !WordsDotDat.list.include? x.downcase}\
       .group_by(&:chr).sort
 
-    pl = PhraseLookup.new s  
+    pl = PhraseLookup.new s
 
     index = words.map do |letter, list|
 
-      a = list.map do |w| 
+      a = list.map do |w|
         phrases = pl.q(w)
         [w, phrases, phrases.map {|x| h[x] }.max]
       end
@@ -92,7 +93,7 @@ class PxIndexBuilder
     rows.map do |x|
 
       head, body, _ = x
-      
+
       a = [{title: head}]
       a << scan(body) if body and body.any?
       a
